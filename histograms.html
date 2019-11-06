@@ -1,0 +1,111 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 75, left: 70},
+    width = 450 - margin.left - margin.right,
+    height = 450 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("style", "outline: thin solid #DDDDDD;")   //This will do the job
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+// get the data
+d3.csv("https://raw.githubusercontent.com/UNIST-Interactions/chartsData/master/histograms.csv", function(data) {
+
+  // X axis: scale and draw:
+  var x = d3.scaleLinear()
+      .domain([0, 1])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
+      .range([0, width]);
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).ticks(5))
+      .style("font", "14px Lato");
+
+  // set the parameters for the histogram
+  var histogram = d3.histogram()
+      //.value(function(d) { return d.Strong; })   // I need to give the vector of value. This is the col name: Strong / Updates / Trust. Original 
+      .value(function(d) { if (parseFloat(d.Updates)>0.01) return "" + (parseFloat(d.Updates) - 0.001); else return "0.01"}) // need to offset the vals slightly to replicate the original <= formulation for the max bound. UGLY!
+      .domain(x.domain())  // then the domain of the graphic
+      .thresholds(x.ticks(20)); // then the numbers of bins
+
+  // And apply this function to data to get the bins
+  var bins = histogram(data);
+  console.log(bins);
+  // Y axis: scale and draw:
+
+  var y = d3.scaleLinear()
+      .range([height, 0]);
+      //y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously. This scales to the max frequency
+      y.domain([0, 300]);   // d3.hist has to be called before the Y axis obviously // fixed max of 300. 
+  
+  svg.append("g")
+      .attr("transform", "translate("+ -10 + ",0)")
+      .call(d3.axisLeft(y).ticks(4))
+      .style("font", "14px Lato");
+
+   // text label for the y axis
+  svg.append("text")
+      .style("font", "18px Lato")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Number of responses"); 
+
+  // text label for the y axis
+  svg.append("text")
+      .style("font", "18px Lato")
+      //.attr("transform", "rotate(-90)")
+      .attr("y", height+25)
+      .attr("x", 0 + width/2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      //.text("How strong is your relationship"); 
+      .text("How much are you looking forward to"); 
+      //.text("How much do you trust this person?"); 
+
+  svg.append("text")
+      .style("font", "18px Lato")
+      //.attr("transform", "rotate(-90)")
+      .attr("y", height+45)
+      .attr("x", 0 + width/2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      //.text("with this person?"); 
+      .text("receiving updates from this person?"); 
+      //.text(" ");
+
+  //console.log(bins);
+  // append the bar rectangles to the svg element
+  svg.selectAll("rect")
+      .data(bins)
+      .enter()
+      .append("rect")
+        .attr("x", 1)
+        .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+        .attr("width", function(d) { xTmp = x(d.x1) - x(d.x0) -1 ; if (xTmp>=0) return xTmp; else return 0; })
+        .attr("height", function(d) { return height - y(d.length); })
+        .style("fill", "#000000")
+
+});
+</script>
