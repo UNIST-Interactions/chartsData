@@ -1,0 +1,248 @@
+<!-- Code from d3-graph-gallery.com -->
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz"></div>
+
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 55, left: 75},
+    width = 450 - margin.left - margin.right,
+    height = 250 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+//d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered_comma.csv",
+d3.csv("https://raw.githubusercontent.com/UNIST-Interactions/chartsData/master/lines_Fig3.csv",
+
+  // When reading the csv, I must format variables:
+  function(d){
+    //return { date : d3.timeParse("%Y-%m-%d")(d.date), value : d.value }
+    return { level : d.Level, low : d['Low Trust'], medium : d['Medium Trust'], high : d['High Trust']}
+  },
+
+  // Now I can use this dataset:
+  function(data) {
+
+    console.log(data);
+
+    // Add X axis --> it is ordinal low/med/high
+    var x = d3.scaleBand()
+      .domain(['Low', 'Medium', 'High'])
+      .range([ 0, width ]);
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+      .style("font", "14px Lato");
+
+     // text label for the x axis
+  svg.append("text")
+      .style("font", "18px Lato")
+      //.attr("transform", "rotate(-90)")
+      .attr("y", height+25)
+      .attr("x", 0 + width/2)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Expected Reciprocity"); 
+
+    // Add Y axis
+    var y = d3.scaleLinear()
+      .domain([-0.8, 0.4])
+      .range([ height, 0 ]);
+    svg.append("g")
+      .call(d3.axisLeft(y))
+      .style("font", "14px Lato");;
+
+
+    // gridlines in y axis function
+    function make_y_gridlines() {   
+        return d3.axisLeft(y)
+            .ticks(5)
+    }
+
+    // add the Y gridlines
+    svg.append("g")     
+      .attr("class", "grid")
+      .call(make_y_gridlines()
+          .tickSize(-width)
+          .tickFormat("")
+      )
+
+  // text label for the y axis
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .style("font", "18px Lato")
+      .attr("y", 0 - margin.left-4)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Intensity of the photo-");   
+
+  // text label for the y axis
+  svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .style("font", "18px Lato")
+      .attr("y", 0 - margin.left + 12)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("related communication");   
+
+
+    // Add the low line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "lightgreen")
+      .style("stroke-dasharray", ("5, 2"))
+      .attr("stroke-width", 2.5)
+      .attr("d", d3.line()
+        .x(function(d) { return x(d.level) + width/6 })
+        .y(function(d) { return y(d.low) })
+        )
+
+    // Add the markers
+    var symDiamond = d3.symbol()
+      .type(d3.symbolDiamond)
+      .size(45);
+    svg.selectAll("myCircles")
+      .data(data)
+      .enter()
+      .append("path")
+        .attr('d', symDiamond)
+        .attr("fill", "lightgreen")
+        .attr("stroke", "black")
+        .attr('transform', function(d) { return 'translate(' + (x(d.level)+width/6) + ',' +y(d.low)+ ')';})
+
+
+
+    // Add the med line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .style("stroke-dasharray", ("10, 4"))
+      .attr("stroke-width", 2.5)
+      .attr("d", d3.line()
+        .x(function(d) { return x(d.level) + width/6 })
+        .y(function(d) { return y(d.medium) })
+        )
+
+    // Add the markers
+    var symSquare = d3.symbol()
+      .type(d3.symbolSquare)
+      .size(45);
+    svg.selectAll("myCircles")
+      .data(data)
+      .enter()
+      .append("path")
+        .attr('d', symSquare)
+        .attr("fill", "steelblue")
+        .attr("stroke", "black")
+        .attr('transform', function(d) { return 'translate(' + (x(d.level)+width/6) + ',' +y(d.medium)+ ')';})
+
+
+
+    // Add the high line
+    svg.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "red")
+      .attr("stroke-width", 2.5)
+      .attr("d", d3.line()
+        .x(function(d) { return x(d.level) + width/6 })
+        .y(function(d) { return y(d.high) })
+        )
+
+    // Add the markers
+    var symCircle = d3.symbol()
+      .type(d3.symbolCircle)
+      .size(45);
+    svg.selectAll("myCircles")
+      .data(data)
+      .enter()
+      .append("path")
+        .attr('d', symCircle)
+        .attr("fill", "red")
+        .attr("stroke", "black")
+        .attr('transform', function(d) { return 'translate(' + (x(d.level)+width/6) + ',' +y(d.high)+ ')';})
+
+
+
+// manually add legend 
+// box
+svg.append("rect")
+  .attr("x", 20)
+  .attr("y", 128)
+  .attr("width", 130)
+  .attr("height", 50)
+  .style("fill", "white")
+  .attr("stroke", "grey");
+
+
+// green line and diamond
+svg.append("line")       
+    .style("stroke", "lightgreen") 
+    .attr("x1", 25)     
+    .attr("y1", 139)      
+    .attr("x2", 55)     
+    .attr("y2", 139)
+    .style("stroke-dasharray", ("5, 2"))
+    .attr("stroke-width", 2.5);
+svg.append("path").attr('d', symDiamond)
+  .attr('transform', function(d) { return 'translate(40, 139)';})
+  .attr("stroke", "black")
+  .style("fill", "lightgreen") 
+
+
+svg.append("line")       
+    .style("stroke", "steelblue") 
+    .attr("x1", 25)     
+    .attr("y1", 154)      
+    .attr("x2", 55)     
+    .attr("y2", 154)
+    .style("stroke-dasharray", ("10, 4"))
+    .attr("stroke-width", 2.5);
+svg.append("path").attr('d', symSquare)
+  .attr('transform', function(d) { return 'translate(40, 154)';})
+  .attr("stroke", "black")
+  .style("fill", "steelblue") 
+
+
+svg.append("line")       
+    .style("stroke", "red") 
+    .attr("x1", 25)     
+    .attr("y1", 169)      
+    .attr("x2", 55)     
+    .attr("y2", 169)
+    .attr("stroke-width", 2.5);
+svg.append("path").attr('d', symCircle)
+  .attr('transform', function(d) { return 'translate(40, 169)';})
+  .attr("stroke", "black")
+  .style("fill", "red") 
+
+svg.append("text").attr("x", 60).attr("y", 140).text("Low Trust").style("font", "14px Lato").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 60).attr("y", 155).text("Medium Trust").style("font", "14px Lato").attr("alignment-baseline","middle")
+svg.append("text").attr("x", 60).attr("y", 170).text("High Trust").style("font", "14px Lato").attr("alignment-baseline","middle")
+
+
+
+})
+
+</script>
